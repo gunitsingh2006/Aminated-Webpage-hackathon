@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  html {
+    @apply overflow-x-hidden;
+  }
+
+  body {
+    @apply  text-white font-dm overflow-x-hidden cursor-none;
+  }
+
+  ::selection {
+    @apply bg-accent text-black;
+  }
+
+  a {
+    @apply no-underline cursor-none;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-[3px];
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-black;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-accent rounded-sm;
+  }
+}
+
+@layer components {
+  .feature-card::before {
+    content: '';
+    @apply absolute inset-0 bg-accent scale-y-0 origin-bottom transition-transform duration-500 z-0;
+    transition-timing-function: cubic-bezier(.16,1,.3,1);
+  }
+
+  .feature-card:hover::before {
+    @apply scale-y-100;
+  }
+
+  .feature-card:hover .fc-num,
+  .feature-card:hover .fc-title,
+  .feature-card:hover .fc-text {
+    @apply !text-black;
+  }
+
+  .white-col::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-[3px] bg-accent scale-x-0 origin-left transition-transform duration-[600ms];
+    transition-timing-function: cubic-bezier(.16,1,.3,1);
+  }
+
+  .white-col:hover::before {
+    @apply scale-x-100;
+  }
+
+  .cta-main-btn::before {
+    content: '';
+    @apply absolute inset-0 bg-accent2 -translate-x-full transition-transform duration-500;
+    transition-timing-function: cubic-bezier(.16,1,.3,1);
+  }
+
+  .cta-main-btn:hover::before {
+    @apply translate-x-0;
+  }
+
+  .cta-main-btn:hover {
+    @apply !text-black;
+  }
+
+  .scroll-circle::before {
+    content: '';
+    @apply absolute inset-0 bg-accent scale-0 rounded-full transition-transform duration-[400ms];
+    transition-timing-function: cubic-bezier(.16,1,.3,1);
+  }
+
+  .scroll-circle:hover::before {
+    @apply scale-100;
+  }
+}
+
+@layer utilities {
+  .w-15 {
+    width: 3.75rem; /* 60px */
+  }
+
+  @media (max-width: 768px) {
+    .desktop-nav-links {
+      @apply !hidden;
+    }
+    .cards-grid {
+      @apply !grid-cols-2;
+    }
+    .hero-grid,
+    .wb1-grid,
+    .wb2-grid,
+    .feat-grid {
+      @apply !grid-cols-1;
+    }
+    .hs-panel {
+      @apply w-screen;
+    }
+    .hero-title {
+      font-size: clamp(4rem, 18vw, 8rem) !important;
+    }
+    .p3-title {
+      font-size: clamp(4rem, 16vw, 10rem) !important;
+    }
+  }
+}

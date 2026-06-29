@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SLICE — React Preview</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Unbounded:wght@300;400;700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { overflow-x:hidden; }
+body { background:#080808; color:#f8f8f8; font-family:'DM Sans',sans-serif; overflow-x:hidden; cursor:none; }
+:root { --black:#080808; --white:#f7f4ee; --accent:#ff3c2e; --accent2:#ffcf00; --mid:#141414; }
+::selection { background:var(--accent); color:#080808; }
+a { text-decoration:none; cursor:none; }
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-track { background:var(--black); }
+::-webkit-scrollbar-thumb { background:var(--accent); border-radius:2px; }
+.feature-card::before { content:''; position:absolute; inset:0; background:var(--accent); transform:scaleY(0); transform-origin:bottom; transition:transform .5s cubic-bezier(.16,1,.3,1); z-index:0; }
+.feature-card:hover::before { transform:scaleY(1); }
+.feature-card:hover .fc-num, .feature-card:hover .fc-title, .feature-card:hover .fc-text { color:var(--black) !important; }
+.white-col::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); transform:scaleX(0); transform-origin:left; transition:transform .6s cubic-bezier(.16,1,.3,1); }
+.white-col:hover::before { transform:scaleX(1); }
+.cta-main-btn::before { content:''; position:absolute; inset:0; background:var(--accent2); transform:translateX(-101%); transition:transform .5s cubic-bezier(.16,1,.3,1); }
+.cta-main-btn:hover::before { transform:translateX(0); }
+.cta-main-btn:hover { color:var(--black) !important; }
+.scroll-circle::before { content:''; position:absolute; inset:0; background:var(--accent); transform:scale(0); border-radius:50%; transition:transform .4s cubic-bezier(.16,1,.3,1); }
+.scroll-circle:hover::before { transform:scale(1); }
+@media(max-width:768px){
+  .desktop-nav-links { display:none !important; }
+  .cards-grid { grid-template-columns:1fr 1fr !important; }
+  .hero-grid,.wb1-grid,.wb2-grid,.feat-grid { grid-template-columns:1fr !important; }
+  .hs-panel { width:100vw; }
+  .hero-title { font-size:clamp(4rem,18vw,8rem) !important; }
+  .p3-title { font-size:clamp(4rem,16vw,10rem) !important; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useEffect, useRef, useState } = React;
+
+/* ── CURSOR ─────────────────────────────────── */
+function Cursor() {
+  const dotRef = useRef(); const ringRef = useRef();
+  useEffect(() => {
+    const dot = dotRef.current, ring = ringRef.current;
+    const move = e => {
+      dot.style.transform = `translate(${e.clientX-7}px,${e.clientY-7}px)`;
+      ring.style.transform = `translate(${e.clientX-22}px,${e.clientY-22}px)`;
+    };
+    window.addEventListener('mousemove', move);
+    const enter = () => { dot.style.transform += ' scale(2.5)'; dot.style.background='#ffcf00'; };
+    const leave = () => { dot.style.background='var(--accent)'; };
+    document.querySelectorAll('a,button,.feature-card,.white-col').forEach(el => {
+      el.addEventListener('mouseenter', enter); el.addEventListener('mouseleave', leave);
+    });
+    return () => window.removeEventListener('mousemove', move);
+  }, []);
+  return <>
+    <div ref={dotRef} style={{position:'fixed',zIndex:9999,pointerEvents:'none',width:14,height:14,borderRadius:'50%',background:'var(--accent)',top:0,left:0,mixBlendMode:'difference',transition:'background .2s',willChange:'transform'}}/>
+    <div ref={ringRef} style={{position:'fixed',zIndex:9998,pointerEvents:'none',width:44,height:44,borderRadius:'50%',border:'1.5px solid rgba(255,255,255,.4)',top:0,left:0,transition:'transform .22s cubic-bezier(.16,1,.3,1)',willChange:'transform'}}/>
+  </>;
+}
+
+/* ── LOADER ─────────────────────────────────── */
+function Loader({ onDone }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef();
+  useEffect(() => {
+    let n = 0;
+    const iv = setInterval(() => {
+      n += Math.floor(Math.random()*16)+4;
+      if (n >= 100) {
+        n = 100; clearInterval(iv);
+        setCount(100);
+        setTimeout(() => {
+          gsap.to(ref.current, { clipPath:'inset(0 0 100% 0)', duration:.9, ease:'power4.inOut', onComplete: onDone });
+        }, 300);
+        return;
+      }
+      setCount(n);
+    }, 55);
+  }, []);
+  return (
+    <div ref={ref} style={{position:'fixed',inset:0,background:'var(--black)',zIndex:10000,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'2rem',clipPath:'inset(0 0 0% 0)'}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(7rem,20vw,18rem)',lineHeight:1,color:'var(--white)'}}>{count}</div>
+      <div style={{width:200,height:1,background:'rgba(255,255,255,.08)',overflow:'hidden'}}>
+        <div style={{height:'100%',background:'var(--accent)',width:`${count}%`,transition:'width .1s linear'}}/>
+      </div>
+      <div style={{fontFamily:"'Unbounded',sans-serif",fontSize:'.55rem',letterSpacing:'.35em',textTransform:'uppercase',color:'rgba(255,255,255,.2)'}}>LOADING SLICE</div>
+    </div>
+  );
+}
+
+/* ── NAV ─────────────────────────────────────── */
+function Nav({ visible }) {
+  return (
+    <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:500,padding:'1.6rem 4rem',display:'flex',justifyContent:'space-between',alignItems:'center',mixBlendMode:'difference',opacity:visible?1:0,transition:'opacity .8s ease'}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'2rem',letterSpacing:'.15em',color:'var(--white)'}}>SLICE</div>
+      <ul className="desktop-nav-links" style={{display:'flex',gap:'3rem',listStyle:'none'}}>
+        {['Chapter I','Chapter II','Chapter III'].map((ch,i)=>(
+          <li key={i}><a href={`#page${i+1}`} style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.68rem',fontWeight:500,letterSpacing:'.2em',textTransform:'uppercase',color:'rgba(255,255,255,.45)',transition:'color .3s'}}
+            onMouseEnter={e=>e.target.style.color='#f8f8f8'} onMouseLeave={e=>e.target.style.color='rgba(255,255,255,.45)'}>{ch}</a></li>
+        ))}
+      </ul>
+      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.6rem',letterSpacing:'.2em',textTransform:'uppercase',color:'var(--accent)',border:'1px solid var(--accent)',padding:'.4em 1em'}}>2047 Edition</div>
+    </nav>
+  );
+}
+
+/* ── PAGE 1 ──────────────────────────────────── */
+function Page1() {
+  const secRef=useRef(), lines=useRef([]), tagRef=useRef(), scrollRef=useRef(), eyeRef=useRef(), bgRef=useRef(), decoRef=useRef();
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    const tl = gsap.timeline({ delay:.15 });
+    tl.to(eyeRef.current,{width:60,duration:.7,ease:'power3.out'})
+      .to(decoRef.current,{height:130,duration:.9,ease:'power3.out'},'-=.3')
+      .to(lines.current,{y:0,duration:1.15,ease:'power4.out',stagger:.12},'-=.5')
+      .to(tagRef.current,{opacity:1,y:0,duration:.9,ease:'power3.out'},'-=.5')
+      .to(scrollRef.current,{opacity:1,duration:.7},'-=.3');
+    gsap.to(bgRef.current,{x:-80,duration:22,ease:'none',repeat:-1,yoyo:true});
+    gsap.to(bgRef.current,{yPercent:25,ease:'none',scrollTrigger:{trigger:secRef.current,start:'top top',end:'bottom top',scrub:2}});
+    gsap.to('.scroll-circle',{scale:1.15,duration:1.2,ease:'sine.inOut',yoyo:true,repeat:-1});
+  },[]);
+  return (
+    <section id="page1" ref={secRef} style={{minHeight:'100vh',background:'var(--black)',display:'flex',flexDirection:'column',justifyContent:'flex-end',padding:'0 5vw 6vh',position:'relative',overflow:'hidden'}}>
+      <div ref={bgRef} style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(12rem,32vw,34rem)',color:'transparent',WebkitTextStroke:'1px rgba(255,255,255,.03)',whiteSpace:'nowrap',pointerEvents:'none',userSelect:'none',letterSpacing:'.05em'}}>LIFE</div>
+      <div ref={decoRef} style={{position:'absolute',top:'15vh',right:'8vw',width:1,height:0,background:'linear-gradient(180deg,var(--accent),transparent)'}}/>
+      <div style={{display:'flex',alignItems:'center',gap:'1.5rem',marginBottom:'2.5rem',overflow:'hidden'}}>
+        <div ref={eyeRef} style={{width:0,height:1,background:'var(--accent)'}}/>
+        <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.65rem',fontWeight:500,letterSpacing:'.35em',textTransform:'uppercase',color:'var(--accent)',whiteSpace:'nowrap'}}>Slice — A living archive of the human day</span>
+      </div>
+      <h1 className="hero-title" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(5rem,17vw,18rem)',lineHeight:.88,letterSpacing:'.02em',overflow:'hidden',position:'relative',zIndex:2}}>
+        {['The day','you almost','forgot.'].map((t,i)=>(
+          <span key={i} style={{overflow:'hidden',display:'block'}}>
+            <span ref={el=>lines.current[i]=el} style={{display:'inline-block',transform:'translateY(110%)',color:i===2?'var(--accent)':'var(--white)'}}>{t}</span>
+          </span>
+        ))}
+      </h1>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginTop:'3rem',zIndex:2,position:'relative'}}>
+        <p ref={tagRef} style={{fontFamily:"'DM Sans',sans-serif",fontSize:'clamp(.85rem,1.4vw,1.15rem)',fontWeight:300,lineHeight:1.75,color:'rgba(248,244,238,.45)',maxWidth:400,opacity:0,transform:'translateY(20px)'}}>
+          Not the highlights. Not the milestones.<br/>The 11:17 a.m. when the coffee was still warm<br/>and you finally exhaled. We built this for <em style={{color:'var(--white)'}}>that.</em>
+        </p>
+        <div ref={scrollRef} style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'.6rem',opacity:0}}>
+          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'1rem',color:'rgba(255,255,255,.2)'}}>↓ Scroll</span>
+          <a href="#p1white" className="scroll-circle" style={{width:56,height:56,borderRadius:'50%',border:'1px solid rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem',color:'var(--white)',position:'relative',overflow:'hidden'}}>
+            <span style={{position:'relative',zIndex:1}}>↓</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── WHITE BLOCK 1 ───────────────────────────── */
+function WhiteBlock1() {
+  const secRef=useRef(), curtRef=useRef(), labRef=useRef(), wds=useRef([]), bodyRef=useRef(), stRef=useRef();
+  useEffect(()=>{
+    ScrollTrigger.create({ trigger:secRef.current, start:'top 70%', onEnter:()=>{
+      gsap.to(curtRef.current,{scaleX:0,duration:1.2,ease:'power4.inOut',transformOrigin:'right'});
+      gsap.to(labRef.current,{opacity:1,duration:.7,delay:.6});
+      gsap.to(wds.current,{y:0,duration:1,ease:'power4.out',stagger:.1,delay:.5});
+      gsap.to(bodyRef.current,{opacity:1,duration:.8,delay:1.1});
+      gsap.to(stRef.current,{opacity:1,y:0,duration:.8,delay:1.3});
+    }});
+  },[]);
+  const words=[['Moments'],["don't",'wait'],['for','you.']];
+  return (
+    <section id="p1white" ref={secRef} className="wb1-grid" style={{background:'var(--white)',display:'grid',gridTemplateColumns:'1fr 1fr',minHeight:'80vh',overflow:'hidden'}}>
+      <div style={{position:'relative',overflow:'hidden',background:'#e8e0d0',minHeight:'80vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{width:'70%',height:'70%',borderRadius:4,background:'linear-gradient(135deg,#d4c4a8,#b8a88a)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3rem',color:'rgba(255,255,255,.35)'}}>✦</div>
+        <div ref={curtRef} style={{position:'absolute',inset:0,background:'var(--accent)'}}/>
+      </div>
+      <div style={{background:'var(--white)',padding:'8vw 5vw',display:'flex',flexDirection:'column',justifyContent:'center'}}>
+        <div ref={labRef} style={{fontFamily:"'Unbounded',sans-serif",fontSize:'.55rem',fontWeight:700,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--accent)',marginBottom:'2.5rem',opacity:0}}>Chapter I — The Beginning</div>
+        <h2 style={{fontFamily:"'Unbounded',sans-serif",fontWeight:900,fontSize:'clamp(2rem,4vw,4.2rem)',lineHeight:1.05,color:'var(--black)',marginBottom:'2rem',overflow:'hidden'}}>
+          {words.map((line,li)=>(
+            <div key={li} style={{overflow:'hidden'}}>
+              {line.map((w,wi)=>(
+                <span key={wi} ref={el=>wds.current[li*3+wi]=el} style={{display:'inline-block',transform:'translateY(110%)',marginRight:'.35em'}}>{w}</span>
+              ))}
+            </div>
+          ))}
+        </h2>
+        <p ref={bodyRef} style={{fontFamily:"'DM Sans',sans-serif",fontSize:'1rem',fontWeight:300,lineHeight:1.85,color:'rgba(8,8,8,.52)',maxWidth:360,opacity:0}}>We live across too many selves — the morning self, the 3 a.m. self, the version of you that laughed at something you've already forgotten. Slice was built to hold all of them, exactly as they happened.</p>
+        <div ref={stRef} style={{display:'flex',gap:'3rem',marginTop:'3rem',opacity:0,transform:'translateY(20px)'}}>
+          {[['24M','Moments captured'],['98%','Said it changed them']].map(([n,l])=>(
+            <div key={n}>
+              <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'3.5rem',color:'var(--black)',display:'block',lineHeight:1}}>{n}</span>
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.65rem',fontWeight:500,letterSpacing:'.2em',textTransform:'uppercase',color:'rgba(8,8,8,.38)'}}>{l}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── HORIZONTAL PANELS ───────────────────────── */
+function HorizontalScroll() {
+  const wrapRef=useRef(), innerRef=useRef();
+  useEffect(()=>{
+    const inner=innerRef.current, wrap=wrapRef.current;
+    const anim=gsap.to(inner,{x:()=>-(inner.scrollWidth-window.innerWidth),ease:'none',duration:1});
+    ScrollTrigger.create({trigger:wrap,pin:true,start:'top top',end:()=>'+='+(inner.scrollWidth-window.innerWidth),scrub:1.2,animation:anim});
+  },[]);
+  const panels=[
+    {bg:'var(--accent)',tc:'var(--black)',xt:'rgba(8,8,8,.6)',num:'I',title:'The Capture\nWithout Friction',text:'A single breath. A voice note. A glance at the window. Slice reads the texture of your day — not through surveillance, but through invitation.'},
+    {bg:'var(--black)',tc:'var(--white)',xt:'rgba(248,244,238,.45)',num:'II',title:'What Repetition\nReveals',text:'After forty-three Tuesdays, something becomes visible. Not a trend. A character. Yours. Slice surfaces the architecture of your ordinary.'},
+    {bg:'var(--white)',tc:'var(--black)',xt:'rgba(8,8,8,.5)',num:'III',title:'The Archive\nThat Breathes',text:"Three years from now, you will search for 'the day the light came through differently.' And it will be there — because you trusted somewhere to hold it."},
+  ];
+  return (
+    <div ref={wrapRef} style={{overflow:'hidden',height:'100vh',position:'relative'}}>
+      <div ref={innerRef} style={{display:'flex',width:'max-content',height:'100%'}}>
+        {panels.map((p,i)=>(
+          <div key={i} className="hs-panel" style={{width:'100vw',height:'100vh',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 10vw',background:p.bg,position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',fontFamily:"'Bebas Neue',sans-serif",fontSize:'18rem',color:'transparent',WebkitTextStroke:`1px ${p.tc==='var(--black)'?'rgba(0,0,0,.06)':'rgba(255,255,255,.05)'}`,pointerEvents:'none',lineHeight:1}}>{p.num}</div>
+            <div style={{position:'relative',zIndex:2}}>
+              <h3 style={{fontFamily:"'Unbounded',sans-serif",fontWeight:900,fontSize:'clamp(2rem,5vw,5rem)',lineHeight:1.1,color:p.tc,marginBottom:'2rem',whiteSpace:'pre-line'}}>{p.title}</h3>
+              <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:'1rem',fontWeight:300,lineHeight:1.85,color:p.xt,maxWidth:380}}>{p.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── PAGE 2 ──────────────────────────────────── */
+function Page2() {
+  const secRef=useRef(), marqRef=useRef(), tWords=useRef([]), descRef=useRef(), cards=useRef([]);
+  useEffect(()=>{
+    gsap.to(marqRef.current,{x:'-50%',duration:22,ease:'none',repeat:-1});
+    ScrollTrigger.create({trigger:secRef.current,start:'top 75%',onEnter:()=>{
+      gsap.to(tWords.current,{y:0,duration:1.1,ease:'power4.out',stagger:.09});
+      gsap.to(descRef.current,{opacity:1,y:0,duration:1,delay:.4});
+    }});
+    cards.current.forEach((card,i)=>{
+      ScrollTrigger.create({trigger:card,start:'top 85%',onEnter:()=>gsap.to(card,{opacity:1,y:0,duration:.9,ease:'power3.out',delay:i*.12})});
+      card.addEventListener('mousemove',e=>{
+        const r=card.getBoundingClientRect();
+        gsap.to(card,{rotateX:-(((e.clientY-r.top)/r.height)-.5)*6,rotateY:(((e.clientX-r.left)/r.width)-.5)*6,duration:.3,ease:'power2.out',transformPerspective:800});
+      });
+      card.addEventListener('mouseleave',()=>gsap.to(card,{rotateX:0,rotateY:0,duration:.6,ease:'elastic.out(1,.6)'}));
+    });
+    ScrollTrigger.create({trigger:secRef.current,start:'top 60%',once:true,onEnter:()=>{
+      const chars="SLICE!@#$%&*";
+      cards.current.forEach(card=>{
+        const el=card.querySelector('.fc-title'); if(!el)return;
+        const orig=el.textContent; let c=0;
+        const iv=setInterval(()=>{ el.textContent=orig.split('').map((ch,i)=>i<c?orig[i]:chars[Math.floor(Math.random()*chars.length)]).join(''); if(c>=orig.length)clearInterval(iv); c+=.5; },40);
+      });
+    }});
+  },[]);
+  const cardData=[
+    {n:'01',title:'Presence',text:'Capture without thinking. Slice blends into your rhythm — voice, image, thought. Nothing lost in translation.'},
+    {n:'02',title:'Pattern',text:'After 43 Tuesdays, you see your character not your calendar. The data that makes you legible to yourself.'},
+    {n:'03',title:'Memory',text:"An archive that breathes. Search by feeling, not just date. 'The day the light came through differently.'"},
+    {n:'04',title:'Connection',text:'Some moments belong only to you. Others become legend between two people. Slice knows the difference.'},
+  ];
+  const marq=Array(6).fill(['SLICE OF LIFE','✦','EVERY MOMENT REMEMBERED','✦','THE ARCHIVE THAT BREATHES','✦']).flat();
+  const tlines=[['Everything'],['you','lived'],['deserves'],['a shelf.']];
+  return (
+    <section id="page2" ref={secRef} style={{background:'var(--black)',minHeight:'100vh',padding:'12vh 5vw',position:'relative',overflow:'hidden'}}>
+      <div style={{overflow:'hidden',borderTop:'1px solid rgba(255,255,255,.06)',borderBottom:'1px solid rgba(255,255,255,.06)',padding:'1.5rem 0',marginBottom:'10vh'}}>
+        <div ref={marqRef} style={{display:'flex',gap:'4rem',whiteSpace:'nowrap',width:'max-content'}}>
+          {marq.map((t,i)=><span key={i} style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'1.1rem',letterSpacing:'.3em',textTransform:'uppercase',color:t==='✦'?'var(--accent)':'rgba(255,255,255,.1)'}}>{t}</span>)}
+        </div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6vw',marginBottom:'10vh',alignItems:'end',position:'relative'}}>
+        <div style={{position:'absolute',top:'2rem',right:'-2vw',fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(8rem,20vw,20rem)',lineHeight:.85,color:'transparent',WebkitTextStroke:'1px rgba(255,255,255,.05)',pointerEvents:'none'}}>02</div>
+        <h2 style={{fontFamily:"'Unbounded',sans-serif",fontWeight:900,fontSize:'clamp(2.5rem,5vw,5.5rem)',lineHeight:1.05,position:'relative'}}>
+          {tlines.map((line,li)=>(
+            <div key={li} style={{overflow:'hidden'}}>
+              {line.map((w,wi)=>(
+                <span key={wi} ref={el=>tWords.current[li*3+wi]=el} style={{display:'inline-block',transform:'translateY(110%)',marginRight:'.25em',color:li===3?'var(--accent)':'var(--white)'}}>{w}</span>
+              ))}
+            </div>
+          ))}
+        </h2>
+        <p ref={descRef} style={{fontFamily:"'DM Sans',sans-serif",fontSize:'1.05rem',fontWeight:300,lineHeight:1.85,color:'rgba(248,244,238,.4)',opacity:0,transform:'translateY(20px)'}}>
+          In 2047, memory is not nostalgia. It is infrastructure. Slice doesn't just store — it <em style={{color:'var(--white)'}}>organizes your soul</em> into something you can revisit without flinching.
+        </p>
+      </div>
+      <div className="cards-grid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'1.5px'}}>
+        {cardData.map((c,i)=>(
+          <div key={i} ref={el=>cards.current[i]=el} className="feature-card" style={{background:'rgba(255,255,255,.02)',border:'1px solid rgba(255,255,255,.05)',padding:'3rem 2rem',position:'relative',overflow:'hidden',opacity:0,transform:'translateY(60px)',cursor:'none'}}>
+            <div className="fc-num" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'4rem',color:'rgba(255,255,255,.05)',lineHeight:1,marginBottom:'3rem',transition:'color .3s',position:'relative',zIndex:1}}>{c.n}</div>
+            <div className="fc-title" style={{fontFamily:"'Unbounded',sans-serif",fontWeight:700,fontSize:'.85rem',letterSpacing:'.04em',textTransform:'uppercase',color:'var(--white)',marginBottom:'1rem',transition:'color .3s',position:'relative',zIndex:1}}>{c.title}</div>
+            <p className="fc-text" style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.88rem',lineHeight:1.8,color:'rgba(248,244,238,.38)',transition:'color .3s',position:'relative',zIndex:1}}>{c.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── WHITE BLOCK 2 ───────────────────────────── */
+function WhiteBlock2() {
+  const secRef=useRef(), curtRef=useRef(), labRef=useRef(), qw=useRef([]), subRef=useRef();
+  useEffect(()=>{
+    ScrollTrigger.create({trigger:secRef.current,start:'top 75%',onEnter:()=>{
+      gsap.to(curtRef.current,{scaleX:0,duration:1.2,ease:'power4.inOut',transformOrigin:'left'});
+      gsap.to(labRef.current,{opacity:1,duration:.7,delay:.4});
+      gsap.to(qw.current,{y:0,duration:1,ease:'power4.out',stagger:.08,delay:.5});
+      gsap.to(subRef.current,{opacity:1,duration:.8,delay:1.2});
+    }});
+  },[]);
+  const qlines=[['You did not'],['need a','bigger'],['life. You needed'],['to see this one.']];
+  return (
+    <section ref={secRef} className="wb2-grid" style={{background:'var(--white)',minHeight:'65vh',display:'grid',gridTemplateColumns:'55% 45%',overflow:'hidden'}}>
+      <div style={{padding:'8vw 5vw',display:'flex',flexDirection:'column',justifyContent:'center'}}>
+        <div ref={labRef} style={{fontFamily:"'Unbounded',sans-serif",fontSize:'.55rem',fontWeight:700,letterSpacing:'.4em',textTransform:'uppercase',color:'rgba(8,8,8,.28)',marginBottom:'3rem',opacity:0}}>Why Choose Slice</div>
+        <div style={{fontFamily:"'Unbounded',sans-serif",fontWeight:900,fontSize:'clamp(1.8rem,3.5vw,3.8rem)',lineHeight:1.15,color:'var(--black)',marginBottom:'2.5rem',overflow:'hidden'}}>
+          {qlines.map((line,li)=>(
+            <div key={li} style={{overflow:'hidden'}}>
+              {line.map((w,wi)=>(
+                <span key={wi} ref={el=>qw.current[li*3+wi]=el} style={{display:'inline-block',transform:'translateY(110%)',marginRight:'.25em',color:li===3?'var(--accent)':'var(--black)'}}>{w}</span>
+              ))}
+            </div>
+          ))}
+        </div>
+        <p ref={subRef} style={{fontFamily:"'DM Sans',sans-serif",fontSize:'1rem',fontWeight:300,color:'rgba(8,8,8,.5)',lineHeight:1.85,maxWidth:400,opacity:0}}>
+          No other tool chooses care over cleverness. Slice was not built to be impressive. It was built to be <strong style={{fontWeight:500,color:'var(--black)'}}>true</strong> — to the way memory actually works, and the way humans actually live.
+        </p>
+      </div>
+      <div style={{background:'#1a1a1a',position:'relative',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{width:'70%',height:'70%',background:'linear-gradient(135deg,#2a2a2a,#111)',borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2.5rem',color:'rgba(255,255,255,.06)'}}>◆</div>
+        <div ref={curtRef} style={{position:'absolute',inset:0,background:'var(--accent2)',transformOrigin:'right'}}/>
+      </div>
+    </section>
+  );
+}
+
+/* ── PAGE 3 ──────────────────────────────────── */
+function Page3() {
+  const secRef=useRef(), eyeRef=useRef(), wds=useRef([]), bodyRef=useRef(), ctaRef=useRef(), btnRef=useRef(), rings=useRef([]);
+  useEffect(()=>{
+    ScrollTrigger.create({trigger:secRef.current,start:'top 70%',onEnter:()=>{
+      gsap.to(eyeRef.current,{opacity:1,y:0,duration:.7});
+      gsap.to(wds.current,{y:0,duration:1.2,ease:'power4.out',stagger:.1,delay:.2});
+      gsap.to(bodyRef.current,{opacity:1,y:0,duration:1,delay:.7});
+      gsap.to(ctaRef.current,{opacity:1,y:0,duration:.8,delay:1});
+      gsap.fromTo(rings.current,{scale:0,opacity:0},{scale:1,opacity:1,duration:1.5,ease:'power3.out',stagger:.15,delay:.3});
+      gsap.to(rings.current,{rotation:360,duration:30,ease:'none',repeat:-1,stagger:5});
+    }});
+    const btn=btnRef.current; if(!btn) return;
+    btn.addEventListener('mousemove',e=>{
+      const r=btn.getBoundingClientRect();
+      gsap.to(btn,{x:(e.clientX-r.left-r.width/2)*.35,y:(e.clientY-r.top-r.height/2)*.35,duration:.5,ease:'power2.out'});
+    });
+    btn.addEventListener('mouseleave',()=>gsap.to(btn,{x:0,y:0,duration:.8,ease:'elastic.out(1,.5)'}));
+  },[]);
+  const tlines=[['Start'],['now.'],['Not'],['tomorrow.']];
+  return (
+    <section id="page3" ref={secRef} style={{background:'var(--black)',minHeight:'100vh',position:'relative',overflow:'hidden',display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',textAlign:'center',padding:'12vh 5vw'}}>
+      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}}>
+        {[300,500,700,900].map((s,i)=>(
+          <div key={i} ref={el=>rings.current[i]=el} style={{position:'absolute',width:s,height:s,borderRadius:'50%',border:`1px solid ${i===3?'rgba(255,60,46,.07)':'rgba(255,255,255,.04)'}`}}/>
+        ))}
+      </div>
+      <div ref={eyeRef} style={{fontFamily:"'Unbounded',sans-serif",fontSize:'.55rem',fontWeight:700,letterSpacing:'.4em',textTransform:'uppercase',color:'var(--accent)',marginBottom:'4vh',opacity:0,transform:'translateY(20px)',position:'relative',zIndex:2}}>03 — The Realization</div>
+      <h2 className="p3-title" style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(5rem,15vw,16rem)',lineHeight:.88,letterSpacing:'.03em',overflow:'hidden',position:'relative',zIndex:2,marginBottom:'4vh'}}>
+        {tlines.map((line,li)=>(
+          <span key={li} style={{overflow:'hidden',display:'block'}}>
+            {line.map((w,wi)=>(
+              <span key={wi} ref={el=>wds.current[li*2+wi]=el} style={{display:'inline-block',transform:'translateY(110%)',color:li===1?'var(--accent)':'var(--white)',marginRight:'.15em'}}>{w}</span>
+            ))}
+          </span>
+        ))}
+      </h2>
+      <p ref={bodyRef} style={{fontFamily:"'DM Sans',sans-serif",fontSize:'clamp(.95rem,1.5vw,1.2rem)',fontWeight:300,lineHeight:1.85,color:'rgba(248,244,238,.42)',maxWidth:540,marginBottom:'6vh',opacity:0,transform:'translateY(20px)',position:'relative',zIndex:2}}>
+        No archive is ever too late to start. The day you begin is the day you stop letting life run through your fingers. <strong style={{color:'var(--white)',fontWeight:400}}>Slice</strong> is not a productivity tool. It is a quiet act of respect — directed at the version of you that moves too fast to notice how full this already is.
+      </p>
+      <div ref={ctaRef} style={{display:'flex',alignItems:'center',gap:'2rem',position:'relative',zIndex:2,opacity:0,transform:'translateY(20px)'}}>
+        <a ref={btnRef} href="#" className="cta-main-btn" style={{position:'relative',display:'inline-flex',alignItems:'center',gap:'1rem',padding:'1.4rem 4rem',background:'var(--accent)',color:'var(--white)',fontFamily:"'Unbounded',sans-serif",fontWeight:700,fontSize:'.75rem',letterSpacing:'.12em',textTransform:'uppercase',overflow:'hidden',transition:'color .3s'}}>
+          <span style={{position:'relative',zIndex:1}}>Begin your first slice</span>
+          <span style={{position:'relative',zIndex:1}}>→</span>
+        </a>
+        <a href="#" style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.75rem',fontWeight:500,letterSpacing:'.15em',textTransform:'uppercase',color:'rgba(248,244,238,.38)',borderBottom:'1px solid rgba(248,244,238,.15)',paddingBottom:2,transition:'color .3s,border-color .3s'}}
+          onMouseEnter={e=>{e.target.style.color='var(--white)';e.target.style.borderColor='var(--white)'}}
+          onMouseLeave={e=>{e.target.style.color='rgba(248,244,238,.38)';e.target.style.borderColor='rgba(248,244,238,.15)'}}>
+          See how it works
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/* ── FEATURES STRIP ──────────────────────────── */
+function FeaturesStrip() {
+  const secRef=useRef(), cols=useRef([]);
+  useEffect(()=>{
+    ScrollTrigger.create({trigger:secRef.current,start:'top 80%',onEnter:()=>gsap.to(cols.current,{opacity:1,y:0,duration:.9,ease:'power3.out',stagger:.15})});
+    cols.current.forEach(col=>{
+      col.addEventListener('mousemove',e=>{const r=col.getBoundingClientRect(); gsap.to(col,{rotateX:-(((e.clientY-r.top)/r.height)-.5)*4,rotateY:(((e.clientX-r.left)/r.width)-.5)*4,duration:.3,ease:'power2.out',transformPerspective:1000});});
+      col.addEventListener('mouseleave',()=>gsap.to(col,{rotateX:0,rotateY:0,duration:.6,ease:'elastic.out(1,.6)'}));
+    });
+  },[]);
+  const data=[
+    {n:'01',title:'Free to start',text:'Your first year of moments, completely free. No card. No catch. Just begin.'},
+    {n:'02',title:'Private by default',text:'Your archive belongs to you. End-to-end encrypted, zero-knowledge architecture.'},
+    {n:'03',title:'Built for forever',text:'Export anytime, in any format. Your memories outlast any platform. Guaranteed.'},
+  ];
+  return (
+    <section ref={secRef} className="feat-grid" style={{background:'var(--white)',display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1.5px',overflow:'hidden'}}>
+      {data.map((c,i)=>(
+        <div key={i} ref={el=>cols.current[i]=el} className="white-col" style={{background:'var(--white)',padding:'5rem 3rem',border:'1px solid rgba(8,8,8,.06)',position:'relative',overflow:'hidden',opacity:0,transform:'translateY(40px)',cursor:'none'}}>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'5rem',color:'rgba(8,8,8,.05)',lineHeight:1,marginBottom:'2rem'}}>{c.n}</div>
+          <div style={{fontFamily:"'Unbounded',sans-serif",fontWeight:700,fontSize:'.85rem',letterSpacing:'.06em',textTransform:'uppercase',color:'var(--black)',marginBottom:'1rem'}}>{c.title}</div>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.88rem',lineHeight:1.85,color:'rgba(8,8,8,.42)'}}>{c.text}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+/* ── FOOTER ──────────────────────────────────── */
+function Footer() {
+  const ref=useRef();
+  useEffect(()=>{ ScrollTrigger.create({trigger:ref.current,start:'top 85%',onEnter:()=>gsap.to(ref.current,{opacity:1,duration:.8})}); },[]);
+  return (
+    <footer ref={ref} style={{background:'#111',padding:'4rem 5vw',display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(255,255,255,.04)',opacity:0}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'2.5rem',letterSpacing:'.2em',color:'var(--white)'}}>SLICE</div>
+      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.75rem',fontWeight:300,color:'rgba(255,255,255,.28)',letterSpacing:'.1em',textAlign:'center'}}>Every moment remembered. Nothing lost.</div>
+      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:'.6rem',letterSpacing:'.2em',textTransform:'uppercase',color:'rgba(255,255,255,.18)'}}>© 2047 Slice Inc.</div>
+    </footer>
+  );
+}
+
+/* ── ROOT ────────────────────────────────────── */
+function App() {
+  const [loaded, setLoaded] = useState(false);
+  const [navVis, setNavVis] = useState(false);
+  return <>
+    <Cursor/>
+    {!loaded && <Loader onDone={()=>{setLoaded(true); setNavVis(true);}}/>}
+    <Nav visible={navVis}/>
+    <main>
+      <Page1/>
+      <WhiteBlock1/>
+      <HorizontalScroll/>
+      <Page2/>
+      <WhiteBlock2/>
+      <Page3/>
+      <FeaturesStrip/>
+      <Footer/>
+    </main>
+  </>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
